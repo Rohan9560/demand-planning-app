@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Demand Planning Maturity Diagnostic</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Outfit:wght@300;400;500;600;700&display=swap');
+  :root{
+    --deep:#023A40; --teal:#028090; --sea:#00A896; --mint:#02C39A;
+    --ink:#1F2A2E; --grey:#6B7A7E; --light:#ECF4F4; --paper:#F7FAFA;
+    --reactive:#C0392B; --emerging:#E68A00; --developing:#028090; --advanced:#00A896; --leading:#02C39A;
+    --line:#D8E4E4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Outfit',sans-serif;background:var(--paper);color:var(--ink);line-height:1.55}
+  h1,h2,h3,.disp{font-family:'Fraunces',serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  .screen{display:none;animation:fade .5s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* HERO / capture */
+  .hero{background:linear-gradient(135deg,var(--deep),#04565f);color:#fff;min-height:100vh;display:flex;align-items:center}
+  .hero .wrap{width:100%}
+  .kicker{color:var(--mint);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:13px;margin-bottom:14px}
+  .hero h1{font-size:clamp(34px,5vw,58px);font-weight:600;line-height:1.05;max-width:18ch;margin-bottom:18px}
+  .hero p{color:var(--light);font-size:18px;max-width:54ch;margin-bottom:34px}
+  .card{background:#fff;border-radius:18px;padding:30px;box-shadow:0 24px 60px rgba(2,58,64,.28);max-width:520px}
+  .card h3{color:var(--deep);font-size:22px;margin-bottom:18px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:13px;font-weight:500;color:var(--grey);margin-bottom:5px}
+  .field input,.field select{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:15px;color:var(--ink)}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--teal)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .btn{background:var(--teal);color:#fff;border:none;padding:14px 26px;border-radius:11px;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;transition:.2s}
+  .btn:hover{background:var(--deep)}
+  .btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+  .btn.ghost:hover{border-color:var(--teal);color:var(--teal)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+
+  /* questionnaire */
+  .qtop{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10;padding:16px 0}
+  .qtop .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .prog{flex:1;height:8px;background:var(--light);border-radius:99px;overflow:hidden}
+  .prog>div{height:100%;background:linear-gradient(90deg,var(--teal),var(--mint));width:0;transition:width .4s}
+  .pill{font-size:12px;font-weight:600;color:#fff;background:var(--teal);padding:4px 11px;border-radius:99px;white-space:nowrap}
+  .qbody{padding:46px 0 120px}
+  .secttag{color:var(--teal);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:12px;margin-bottom:8px}
+  .qnum{color:var(--grey);font-size:14px;margin-bottom:6px}
+  .qtext{font-family:'Fraunces',serif;font-size:27px;color:var(--deep);font-weight:600;margin-bottom:6px;max-width:30ch}
+  .qmeta{color:var(--grey);font-size:13px;margin-bottom:26px}
+  .qmeta b{color:var(--sea)}
+  .opts{display:flex;flex-direction:column;gap:11px}
+  .opt{border:1.6px solid var(--line);border-radius:13px;padding:15px 17px;cursor:pointer;display:flex;gap:14px;align-items:flex-start;transition:.15s;background:#fff}
+  .opt:hover{border-color:var(--sea);background:var(--light)}
+  .opt.sel{border-color:var(--teal);background:#E6F3F3;box-shadow:0 0 0 3px rgba(2,128,144,.12)}
+  .lvl{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:var(--light);color:var(--deep);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .opt.sel .lvl{background:var(--teal);color:#fff}
+  .opt span.txt{font-size:14.5px;line-height:1.5}
+  .qnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:14px 0}
+  .qnav .wrap{display:flex;justify-content:space-between;gap:14px}
+
+  /* report */
+  .rep{padding:50px 0 80px}
+  .rephero{background:linear-gradient(135deg,var(--deep),#04565f);color:#fff;border-radius:22px;padding:40px;display:grid;grid-template-columns:auto 1fr;gap:38px;align-items:center;margin-bottom:34px}
+  .scorebadge{text-align:center}
+  .scorebadge .n{font-family:'Fraunces',serif;font-size:74px;font-weight:700;line-height:1}
+  .scorebadge .lv{font-size:20px;font-weight:600;color:var(--mint);margin-top:4px}
+  .scorebadge .of{color:var(--light);font-size:13px;opacity:.7}
+  .rephero h2{font-size:30px;font-weight:600;margin-bottom:8px}
+  .rephero p{color:var(--light);max-width:48ch}
+  .meta-line{margin-top:14px;font-size:13px;color:var(--light);opacity:.85}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px}
+  .panel h3{font-size:19px;color:var(--deep);margin-bottom:16px}
+  .bar{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+  .bar .lab{width:90px;font-size:13px;font-weight:500;flex-shrink:0}
+  .bar .track{flex:1;height:14px;background:var(--light);border-radius:99px;overflow:hidden}
+  .bar .fill{height:100%;border-radius:99px;transition:width .8s}
+  .bar .val{width:78px;text-align:right;font-size:12px;font-weight:600;flex-shrink:0}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:var(--deep);color:#fff;padding:9px 8px;text-align:left;font-weight:500;font-size:12px}
+  th:first-child{border-radius:8px 0 0 0}th:last-child{border-radius:0 8px 0 0}
+  td{padding:9px 8px;border-bottom:1px solid var(--line)}
+  .chip{display:inline-block;padding:3px 9px;border-radius:99px;color:#fff;font-size:11px;font-weight:600}
+  .cell-sc{text-align:center;color:#fff;font-weight:600;border-radius:5px}
+  ul.clean{list-style:none}
+  ul.clean li{padding:9px 0;border-bottom:1px solid var(--light);font-size:14px;display:flex;gap:10px;align-items:flex-start}
+  ul.clean li .dot{flex-shrink:0;width:8px;height:8px;border-radius:50%;margin-top:7px}
+  .road{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:6px}
+  .phase{background:var(--deep);color:#fff;border-radius:14px;padding:22px}
+  .phase .ph{color:var(--mint);font-weight:600;font-size:13px;margin-bottom:8px}
+  .phase h4{font-family:'Fraunces',serif;font-size:17px;margin-bottom:8px}
+  .phase p{color:var(--light);font-size:13px}
+  .radar-wrap{display:flex;justify-content:center;align-items:center}
+  .note{background:#FFF8E8;border-left:4px solid var(--emerging);padding:12px 16px;border-radius:8px;font-size:13px;color:#7a5a00;margin-top:14px}
+  .actions{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+  @media(max-width:760px){.grid2,.road{grid-template-columns:1fr}.rephero{grid-template-columns:1fr;text-align:center}.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- SCREEN 1: CAPTURE -->
+<section class="screen active hero" id="s-capture">
+  <div class="wrap" style="display:grid;grid-template-columns:1fr auto;gap:50px;align-items:center">
+    <div>
+      <div class="kicker">Demand Planning · Maturity Diagnostic</div>
+      <h1>Where does your demand planning stand today?</h1>
+      <p>A rapid diagnostic across six core activities and four dimensions — People, Process, Data, and Technology. Answer 26 questions and see your maturity stage instantly, from Reactive to Leading.</p>
+    </div>
+    <div class="card">
+      <h3>Tell us about you</h3>
+      <div class="row2">
+        <div class="field"><label>First name</label><input id="f-first"/></div>
+        <div class="field"><label>Last name</label><input id="f-last"/></div>
+      </div>
+      <div class="field"><label>Company</label><input id="f-co"/></div>
+      <div class="row2">
+        <div class="field"><label>Title</label><input id="f-title"/></div>
+        <div class="field"><label>Industry</label>
+          <select id="f-ind"><option>Automotive</option><option>Consumer Products</option><option>Life Sciences</option><option>Industrial</option><option>High-tech & Electronics</option><option>Chemical</option><option>Other</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Business email</label><input id="f-email" type="email"/></div>
+      <button class="btn" style="width:100%;margin-top:6px" onclick="startQ()">Begin assessment →</button>
+    </div>
+  </div>
+</section>
+
+<!-- SCREEN 2: QUESTIONNAIRE -->
+<section class="screen" id="s-quiz">
+  <div class="qtop"><div class="wrap">
+    <span class="pill" id="q-pill">Question 1 / 26</span>
+    <div class="prog"><div id="q-prog"></div></div>
+    <span style="font-size:13px;color:var(--grey)" id="q-co"></span>
+  </div></div>
+  <div class="qbody"><div class="wrap" id="q-card"></div></div>
+  <div class="qnav"><div class="wrap">
+    <button class="btn ghost" id="q-back" onclick="prevQ()">← Back</button>
+    <button class="btn" id="q-next" onclick="nextQ()" disabled>Next →</button>
+  </div></div>
+</section>
+
+<!-- SCREEN 3: REPORT -->
+<section class="screen rep" id="s-report"><div class="wrap" id="rep-body"></div></section>
+
+<script>
+// ===== FRAMEWORK DATA — your 26 questions, the data layer =====
+// Each question: id, l3, dim, respondent, priority, weight, text, and 5 level definitions.
+const FRAMEWORK = {
+  dims: ["People","Process","Data","Technology"],
+  l3names: {
+    "L3-1":"Develop Baseline Demand Forecasts",
+    "L3-2":"Collaborate Demand with Customers",
+    "L3-3":"Develop Demand Consensus Forecast",
+    "L3-4":"Monitor Activity Against Forecast & Revise",
+    "L3-5":"Evaluate & Revise Forecasting Approach",
+    "L3-6":"Measure Demand Forecast Accuracy",
+  },
+  bands: [
+    {min:1.0,max:1.99,name:"Reactive"},
+    {min:2.0,max:2.99,name:"Emerging"},
+    {min:3.0,max:3.99,name:"Developing"},
+    {min:4.0,max:4.49,name:"Advanced"},
+    {min:4.5,max:5.0,name:"Leading"},
+  ],
+  questions: [
+    {id:1,l3:"L3-1",dim:"People",resp:"Both",pri:"MUST",w:1,q:"Who is responsible for producing the baseline demand forecast in your organization?",
+     o:["Whoever has time (Sales, Operations, Finance) — no dedicated person and no clear ownership of forecast quality.",
+        "A named demand planner exists, but the role has no formal scope, no training budget, and >60% of their time is spent on data gathering.",
+        "Dedicated demand planner(s) with documented job description, RACI, and trained in segmentation, statistical model selection, and lifecycle management.",
+        "Team includes a data analyst / junior data scientist; planner sits on NPI from Gate 1 as a stage-gate authority; IBF CPF or APICS CPIM encouraged for seniors.",
+        "Demand Intelligence Centre of Excellence with data engineers, data scientists, CDO-level data quality SLAs, and a formal career pathway."]},
+    {id:2,l3:"L3-1",dim:"Process",resp:"Both",pri:"MUST",w:1,q:"How do you generate the baseline statistical forecast today?",
+     o:["Last year's actuals copied forward, or a Sales-submitted number used as the plan.",
+        "Single algorithm (typically moving average or linear trend) applied uniformly to all SKUs regardless of pattern.",
+        "ABC×XYZ segmentation drives model selection; documented process for new launches, promotions, phase-in / phase-out, and end-of-life.",
+        "ML ensemble (gradient boosting, neural nets) with automated monthly retraining; demand sensing on weeks 1–4; lifecycle and promo overlays applied automatically.",
+        "Self-optimising models retrained continuously based on demand pattern shifts; output is a probability distribution (P10/P50/P90), not a point estimate."]},
+    {id:3,l3:"L3-1",dim:"Data",resp:"Both",pri:"MUST",w:1,q:"What demand history and reference data do you have to build forecasts?",
+     o:["<12 months of incomplete, unvalidated shipment data; no event tagging; duplicate SKUs and missing hierarchy attributes.",
+        "13–24 months of shipment history; segmentation in personal spreadsheets; no validated lift factors — uplift estimates are gut-feel.",
+        "24–36 months of clean, outlier-treated history in the planning system; promotional lift library by mechanic and channel; NPI analogue library (10+ per category).",
+        "3+ years of clean history with price elasticity by SKU; daily POS for Tier 1 customers; lift model incorporates halo, cannibalization, post-promo dip, display compliance.",
+        "Real-time POS, IoT shelf, social listening, weather, competitor pricing continuously ingested; predictive data quality (>98% completeness, <24h POS latency, SLA-measured)."]},
+    {id:4,l3:"L3-1",dim:"Technology",resp:"Both",pri:"MUST",w:1,q:"What system do you use to produce the baseline forecast?",
+     o:["Individual Excel spreadsheets — multiple contradictory versions circulate with no version control.",
+        "Basic ERP forecasting module or a standalone tool — manual extracts, manual pastes, no audit trail on overlays.",
+        "Best-of-breed planning system (SAP IBP, Kinaxis, o9, Anaplan, Blue Yonder, or Logility) with automated model selection and automated ETL with validation rules.",
+        "ML ensemble in the planning system with auto-retraining; demand sensing engine; dynamic disaggregation method-per-node based on rolling accuracy.",
+        "Unified AI planning platform that assembles the baseline continuously from streaming data; no batch monthly cycle."]},
+    {id:5,l3:"L3-1",dim:"Process",resp:"Both",pri:"GOOD",w:0.5,q:"How do you handle New Product Introductions (NPI) and End-of-Life (EOL) demand?",
+     o:["NPI forecasts emerge after launch; EOL discovered when inventory runs out or Customer Service raises an alarm.",
+        "Analogue-based estimate added at launch with no documented methodology; EOL managed reactively when stock runs down.",
+        "Documented NPI analogue selection from library; phase-in curve templates per category; mandatory cannibalization assessment above a revenue threshold; quarterly slow-mover review.",
+        "NPI cannibalization required as a mandatory stage-gate input before retailer commitment; predictive EOL identification via 13-week trend slope; final-buy methodology documented.",
+        "AI flags EOL candidates months before commercial decision; cannibalization auto-monitored post-launch and forecasts auto-revised when transfer rate deviates >5%."]},
+    {id:6,l3:"L3-2",dim:"Process",resp:"Both",pri:"MUST",w:1,q:"How structured is your demand collaboration with internal teams (Sales, Marketing, Finance)?",
+     o:["No formal alignment process — each function forecasts independently and never reconciles.",
+        "Irregular alignment meetings with no standard agenda, no pre-read, no decision log; Sales forecasts ad hoc with no submission deadline.",
+        "Formal monthly demand review with RACI-defined attendees; pre-read 48h ahead; decision log within 24h; standardised Sales input template with Day 5 deadline; non-submissions flagged.",
+        "Exception-based agenda — only material variances discussed live; automated digital workflow collects and validates inputs; non-compliant submissions auto-flagged to function head.",
+        "AI continuously aligns functions; exceptions auto-routed to owners with recommended actions; missing or late inputs proactively surfaced without planner chasing."]},
+    {id:7,l3:"L3-2",dim:"Process",resp:"Both",pri:"MUST",w:1,q:"How do you collaborate with external customers on forward demand?",
+     o:["Customers send purchase orders only — no forward demand signals exchanged; no customer tiering for collaboration.",
+        "Some intelligence flows informally via KAM relationships; external data shared by email spreadsheet with no reconciliation against internal plan.",
+        "Formal 3-tier CPFR: Tier 1 monthly, Tier 2 quarterly, Tier 3 annual; Joint Business Planning with top 3–5 strategic customers; tiering criteria documented.",
+        "CPFR extended to Tier 2 with automated data exchange and reconciliation; VMI operational for strategic accounts; signed data-sharing SLAs covering quality and timeliness.",
+        "API-connected ecosystem with all Tier 1 and Tier 2 customers; near-real-time signal exchange; AI scores collaboration ROI per customer and recommends tier changes."]},
+    {id:8,l3:"L3-2",dim:"Data",resp:"Both",pri:"MUST",w:1,q:"What customer data feeds your demand forecast?",
+     o:["No customer POS or sell-through data; Sales forecasts not stored anywhere; no pre-order database.",
+        "POS received from a few customers intermittently — not systematically integrated; Sales forecasts in a shared spreadsheet with no version control.",
+        "Weekly POS and sell-through integrated for all Tier 1 accounts; multi-dimensional customer segmentation database; pre-order database separated from statistical demand.",
+        "Daily POS and customer inventory for Tier 1; CRM pipeline integrated with probability weighting; customer forecast accuracy (FVA contribution) tracked per customer over 12 months.",
+        "Real-time customer sell-out, inventory, and promo plan streamed from connected customers; external panel data (Nielsen, Circana, Dunnhumby) integrated; AI weights all sources."]},
+    {id:9,l3:"L3-2",dim:"Technology",resp:"Operations",pri:"GOOD",w:0.5,q:"What technology connects you with customers and internal stakeholders for demand inputs?",
+     o:["Email only — no planning system access for non-planning functions; no customer portal; no EDI.",
+        "Email or spreadsheet inputs; planning system accessible only to demand planners — no cross-functional visibility.",
+        "Cross-functional portal in the planning system — each function submits in-system, not by email; CPFR via EDI/B2B for Tier 1; CRM integration for sales pipeline.",
+        "Role-based access with real-time change tracking; EDI/API with Tier 1 customers; VMI module driving customer replenishment automatically; collaboration ROI dashboard live.",
+        "AI digital collaboration platform pre-populates input forms from trend analysis; API-connected customer ecosystem with continuous signal exchange; compliance automated."]},
+    {id:10,l3:"L3-3",dim:"People",resp:"Both",pri:"MUST",w:1,q:"Who owns the consensus forecast process and what authority do they hold?",
+     o:["No defined owner; demand discussed informally only when a commercial problem forces attention.",
+        "Planner chairs the review informally with inconsistent attendance and no decision authority; plan submitted to S&OP by email.",
+        "Demand planner facilitates the review with documented RACI; manager signs off pre-consensus pack; planner has a formal slot on the S&OP agenda.",
+        "Senior demand planning manager accountable for meeting effectiveness reported to VP Supply Chain; cross-functional scenario team; presents at executive IBP with accountability for accuracy.",
+        "Demand planning lead and CFO co-own the integrated business plan; AI handles routine governance; planner focuses exclusively on high-stakes strategic decisions."]},
+    {id:11,l3:"L3-3",dim:"Process",resp:"Both",pri:"MUST",w:1,q:"How do you run your monthly demand consensus (demand review) meeting?",
+     o:["No meeting — statistical output presented directly or plan submitted informally; no assumption documentation; no version control.",
+        "Monthly meeting with ad hoc agenda and incomplete decision log issued inconsistently; basic pack distributed day-of.",
+        "Standard pre-consensus pack 48–72h ahead with variance vs prior cycle/AOP/3-month trend, assumption log, risk register; base/upside/downside scenarios; formal plan lock.",
+        "Exception-based agenda — only contested items discussed live; pre-meeting feedback collected digitally; driver-based scenarios with probability weights; rolling 18–24 month plan feeds IBP automatically.",
+        "AI auto-approves >80% of SKU-level forecasts; touchless consensus for routine items; scenarios refreshed continuously; no discrete plan lock — plan is always current best estimate."]},
+    {id:12,l3:"L3-3",dim:"Data",resp:"Both",pri:"MUST",w:1,q:"What scenario, assumption, and risk data do you maintain?",
+     o:["Single-point forecast; no scenarios; no assumption documentation; no risk register; no unconstrained vs constrained distinction.",
+        "Basic variance vs prior month; scenarios in personal spreadsheets; risk list exists as meeting notes only; no volume-to-revenue reconciliation.",
+        "3 scenarios with quantified volume and revenue ranges; version-controlled assumption log (owner, basis, date); risk register with probability, $ impact, owner, mitigation; volume-to-revenue bridge.",
+        "Risk-adjusted demand plan (risk items probability-weighted into a range); historical assumption accuracy database; rolling 18–24 month plan to IBP model; auto-calculated revenue bridge.",
+        "ML identifies emerging risks from market data, sentiment, supply indicators and builds scenarios automatically; real-time volume-to-financial translation with <15-min propagation SLA."]},
+    {id:13,l3:"L3-3",dim:"Process",resp:"Both",pri:"GOOD",w:0.5,q:"How is your demand plan integrated with the financial plan and S&OP/IBP?",
+     o:["Volume plan not reconciled to financial revenue targets; demand planner not part of S&OP.",
+        "Informal reconciliation when significant changes occur; planner submits to S&OP by email with no structured review.",
+        "Rolling 18-month demand plan published to S&OP for IBP financial reconciliation; volume × price bridge reconciled each cycle; demand planner has named IBP slot.",
+        "Plan lock auto-cascades to supply, procurement, finance, logistics simultaneously; IBP integration automated — no manual rekey; revenue bridge auto-calculated on publish.",
+        "Continuous IBP — plan changes propagate to financial and supply models in real time; gap to financial plan auto-monitored with alerts to CFO and VP Supply Chain on breach."]},
+    {id:14,l3:"L3-3",dim:"Technology",resp:"Operations",pri:"GOOD",w:0.5,q:"How does technology support consensus development and publication?",
+     o:["No scenario versioning capability; email distribution of plan; no IBP integration.",
+        "Email-based pack distribution; scenarios in spreadsheets outside the planning system; no formal lock function; S&OP submission by email.",
+        "Planning system supports multiple scenario versions published simultaneously; pack auto-generated from template; formal plan lock prevents edits; downstream modules notified.",
+        "Auto-generated exception-based pack; IBP platform manages meeting governance (advance review, live decision tracking, auto-published log); driver-based scenario engine.",
+        "AI touchless consensus engine that learns from human decisions; AI generates meeting narrative with discussion topics, escalation flags, decision prompts; plan always current."]},
+    {id:15,l3:"L3-4",dim:"Process",resp:"Both",pri:"MUST",w:1,q:"How often and how do you monitor demand performance within the cycle?",
+     o:["No in-cycle monitoring — plan is static once published; performance reviewed only at month-end or when a service failure forces it.",
+        "Ad hoc checks triggered only when Sales, Customer Service, or Supply raises a concern; no documented deviation thresholds.",
+        "Weekly in-cycle review: exception report Monday, resolved Wednesday, supply notified Thursday; documented thresholds per segment (A ±10%, B ±20%, C ±30%); weekly S&OE with revenue risk.",
+        "Automated daily signal review with ML demand sensing refreshing weeks 1–4 daily; tiered exception management (auto/planner/manager); dynamic exception thresholds.",
+        "Continuous AI monitoring flags deviations 3–7 days before they materialise; AI auto-resolves exceptions below materiality and learns from human decisions; real-time root cause diagnosis."]},
+    {id:16,l3:"L3-4",dim:"People",resp:"Both",pri:"MUST",w:1,q:"How are forecast overrides governed?",
+     o:["Overrides applied freely with no rationale, accountability, or tracking; no audit trail.",
+        "Manager informally observes override volume but takes no structured corrective action; rationale recorded in personal spreadsheets or not at all.",
+        "System requires rationale category before accepting override; authority limits enforced (planner/manager/director); monthly override accuracy report reviewed with coaching.",
+        "Override FVA tracked per planner with formal coaching plans for negative contributors; improvement tracked over 2 cycles; persistent negatives escalated to HR.",
+        "AI flags likely negative-FVA overrides before they are applied; auto-suppresses inputs with consistently negative FVA, escalating to manager rather than silently accepting."]},
+    {id:17,l3:"L3-4",dim:"Data",resp:"Operations",pri:"GOOD",w:0.5,q:"What demand signals do you ingest beyond shipments and orders?",
+     o:["Month-end ERP actuals only — no in-cycle signal visibility; no POS, sell-through, or order intake tracking.",
+        "Limited POS data from a few customers; order intake monitored informally; no structured tracking or threshold management.",
+        "Weekly POS, distributor offtake, and customer order intake integrated into exception reporting; 13-week rolling CV tracked per SKU.",
+        "Daily POS, order intake, customer inventory, plus external signals (search trends, social, weather) combined in a sensing ensemble weighted by predictive accuracy.",
+        "Real-time POS, e-commerce, IoT shelf, social, weather, competitor pricing, panel data continuously integrated; AI ranks exceptions by revenue, supply risk, service impact."]},
+    {id:18,l3:"L3-4",dim:"Technology",resp:"Both",pri:"GOOD",w:0.5,q:"How does your weekly S&OE cycle work technologically?",
+     o:["No S&OE — in-cycle issues handled only when they cause a service failure; no exception queue in the system.",
+        "Manual ERP order reports reviewed occasionally; manual override entry with no approval workflow or rationale capture.",
+        "Planning system generates weekly actuals vs plan report by Day 2; exception queue with workflow, rationale capture, manager approval, SLA tracking; weekly revenue bridge.",
+        "S&OE module embedded in planning platform; ML demand sensing native; dynamic exception thresholds adjusted from rolling error distribution per segment.",
+        "AI auto-resolves routine exceptions; impact-ranked queue presented to planners; real-time AI root cause diagnosis combining signal patterns, event library, historical correlation."]},
+    {id:19,l3:"L3-5",dim:"People",resp:"Leadership",pri:"MUST",w:1,q:"Do you measure Forecast Value Add (FVA) for each input source?",
+     o:["FVA is not a concept used; no awareness of whether overlays improve or destroy accuracy.",
+        "FVA calculated ad hoc when a process improvement initiative is discussed — not part of the regular cycle.",
+        "FVA calculated monthly per planner, category, and commercial input source; 12-month trend maintained; reviewed as a standing S&OP agenda item.",
+        "FVA decomposed by override reason code (promo, NPI, market intel, commercial bias); positive/negative FVA per reason code; coaching plans for negative contributors.",
+        "AI uses FVA history to predict which future override types will destroy value; auto-suppresses high-risk inputs with manager escalation rather than silent acceptance."]},
+    {id:20,l3:"L3-5",dim:"Process",resp:"Both",pri:"MUST",w:1,q:"How do you decide when to change forecasting methodology or models?",
+     o:["System configured at implementation and never reviewed; parameters undocumented.",
+        "Methodology reviewed reactively only when MAPE deteriorates to a level that forces management attention.",
+        "Quarterly methodology review with holdout back-test on rolling 13-week window; formal pilot process with criteria defined upfront; model change log with approval gate.",
+        "Continuous model performance monitoring triggers an automatic model tournament when accuracy degrades; new models continuously evaluated in parallel on live holdout data.",
+        "AI platform continuously discovers and deploys model improvements; formal model risk management (impact assessment, staged rollout, automated rollback on degradation)."]},
+    {id:21,l3:"L3-5",dim:"People",resp:"Both",pri:"GOOD",w:0.5,q:"What capability development and training program exists for demand planners?",
+     o:["No training program; planners are entirely self-taught with widely varying capability.",
+        "Training delivered only at system go-live; new joiners learn by observation; no ongoing curriculum.",
+        "Formal competency framework with role-specific skill profiles; quarterly training plan review; IBF CPF or APICS CPIM encouraged for seniors with partial funding.",
+        "Personalised training plans from competency gap assessment; succession plan documented for all roles; training ROI correlated with KPI performance.",
+        "AI-powered LMS adapts content to each planner's performance and learning history; learning embedded in daily work; capability is a declared executive-level KPI."]},
+    {id:22,l3:"L3-5",dim:"Process",resp:"Leadership",pri:"GOOD",w:0.5,q:"Do you benchmark forecast performance externally?",
+     o:["No external benchmarking activity.",
+        "Generic industry-average MAPE referenced informally without segmentation by industry, channel, or SKU tier.",
+        "Annual benchmarking using APQC or Gartner peer data; documented improvement targets owned and tracked quarterly; results shared with VP Supply Chain.",
+        "Biannual benchmarking via APQC surveys or IBF study; gap closure tracked as a transformation KPI; movement toward top-quartile MAPE by segment reported.",
+        "Continuous benchmarking via industry consortium API; peer performance as a live dashboard; top-quartile performance a declared strategic target reviewed by executives."]},
+    {id:23,l3:"L3-6",dim:"Data",resp:"Both",pri:"MUST",w:1,q:"Which forecast accuracy and bias metrics do you calculate?",
+     o:["No accuracy or bias measurement; forecast performance evaluated only by proxy (stockouts, write-offs, complaints).",
+        "MAPE calculated for A-class SKUs or revenue-significant items only; MFE (bias) not tracked — directional over/under-forecast undetected.",
+        "MAPE, WMAPE, MAD monthly for 100% of active SKUs by SKU/family/location/channel; MFE tracked per planner, region, category with bias targets (±5% of mean demand).",
+        "Accuracy decomposed by source (model vs overlay vs commercial) — each has a named owner; Value-at-Risk ($) of forecast error quantified per SKU rolled up to portfolio.",
+        "AI predicts likely accuracy range before period closes — drives dynamic safety stock; auto-corrects systematic bias; forward uncertainty distributed for financial risk provisioning."]},
+    {id:24,l3:"L3-6",dim:"Process",resp:"Both",pri:"MUST",w:1,q:"How do you link forecast accuracy to service level and inventory outcomes?",
+     o:["No linkage — service problems and write-offs treated independently from forecast performance.",
+        "Connection discussed informally; never quantified or systematically tracked.",
+        "Monthly cost-of-inaccuracy report: over-forecast impact (excess, write-off, markdown) and under-forecast impact (lost revenue, expedites, penalties) quantified per SKU group.",
+        "Demand-attributed fill rate split from supply-attributed fill rate with accountability; VaR of forecast error reviewed by CFO monthly to inform safety stock investment.",
+        "Real-time financial risk — AI translates forecast uncertainty into live write-off probability and revenue-at-risk; recommends demand shaping (pricing, promo) to close projected gaps."]},
+    {id:25,l3:"L3-6",dim:"Technology",resp:"Both",pri:"MUST",w:1,q:"How is forecast performance calculated and reported?",
+     o:["No system-generated reports; metrics calculated manually in Excel inconsistently across planners.",
+        "MAPE calculated manually in spreadsheet; no MFE; KPI dashboard compiled manually and email-distributed.",
+        "Planning system auto-calculates MAPE, WMAPE, MAD, MFE at period close; KPI dashboard auto-distributed via platform within 5 business days; single source of truth.",
+        "Predictive KPI alerts when metrics trend toward target breach; real-time dashboard for all stakeholders; automated fill rate attribution (demand vs supply) via configurable rules.",
+        "AI platform updates all metrics continuously as actuals post; no batch month-end cycle; benchmarking via consortium API in live dashboard alongside internal metrics."]},
+    {id:26,l3:"L3-6",dim:"People",resp:"Leadership",pri:"GOOD",w:0.5,q:"How is forecast accuracy treated at executive / leadership level?",
+     o:["Forecast performance reviewed only when a stockout or write-off forces attention.",
+        "MAPE reported monthly but not linked to targets, accountability, or improvement actions; no consequence for sustained poor performance.",
+        "Monthly KPI governance in S&OP: MAPE, WMAPE, BIAS, FVA, fill rate vs targets by ABC class; red KPI process triggers root cause and corrective action with named owner.",
+        "Accuracy decomposition has named owners per source; year-on-year MAPE improvement tracked as a transformation KPI to VP Supply Chain; chronic underperformance triggers formal RCCA.",
+        "Forecast accuracy is a declared board-level KPI; MAPE improvement and VaR reduction reported in quarterly earnings as a supply chain capability indicator; continuous benchmarking."]},
+  ],
+};
+
+</script>
+<script>
+const Q = FRAMEWORK.questions, DIMS = FRAMEWORK.dims, L3 = FRAMEWORK.l3names, BANDS = FRAMEWORK.bands;
+const BANDCOL = {Reactive:'var(--reactive)',Emerging:'var(--emerging)',Developing:'var(--developing)',Advanced:'var(--advanced)',Leading:'var(--leading)'};
+let answers = {}, idx = 0, client = {};
+
+function bandFor(s){ if(s==null) return 'Unrated'; for(const b of BANDS) if(s>=b.min&&s<=b.max) return b.name; return s<1?'Reactive':'Leading'; }
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+
+function $(id){return document.getElementById(id);}
+function gv(id){ const e=document.getElementById(id); return e?e.value:''; }
+function startQ(){
+  client = {first:gv('f-first'),last:gv('f-last'),co:gv('f-co')||'Your Company',
+            title:gv('f-title'),ind:gv('f-ind'),email:gv('f-email')};
+  document.getElementById('q-co').textContent = client.co; idx=0; renderQ(); show('s-quiz');
+}
+
+function renderQ(){
+  const q = Q[idx];
+  $('q-pill').textContent = `Question ${idx+1} / ${Q.length}`;
+  $('q-prog').style.width = ((idx)/Q.length*100)+'%';
+  const sect = `${q.l3} · ${L3[q.l3]}`;
+  $('q-card').innerHTML = `
+    <div class="secttag">${sect}</div>
+    <div class="qnum">Question ${idx+1}</div>
+    <div class="qtext">${q.q}</div>
+    <div class="qmeta">Dimension: <b>${q.dim}</b> &nbsp;·&nbsp; Priority: <b>${q.pri}</b></div>
+    <div class="opts">${q.o.map((t,i)=>`
+      <div class="opt ${answers[q.id]===i+1?'sel':''}" onclick="pick(${q.id},${i+1})">
+        <div class="lvl">${i+1}</div><span class="txt">${t}</span>
+      </div>`).join('')}</div>`;
+  $('q-back').style.visibility = idx===0?'hidden':'visible';
+  $('q-next').disabled = !answers[q.id];
+  $('q-next').textContent = idx===Q.length-1 ? 'See my report →' : 'Next →';
+}
+function pick(id,v){ answers[id]=v; renderQ(); }
+function nextQ(){ if(idx<Q.length-1){idx++;renderQ();} else buildReport(); }
+function prevQ(){ if(idx>0){idx--;renderQ();} }
+
+// ===== SCORING ENGINE (weighted, deterministic) =====
+function score(){
+  const cells = Q.map(q=>({l3:q.l3,dim:q.dim,w:q.w,s:answers[q.id]})).filter(c=>c.s);
+  const wavg = arr => { let n=0,d=0; arr.forEach(c=>{n+=c.s*c.w;d+=c.w}); return d?+(n/d).toFixed(2):null; };
+  const byDim = {}, byL3 = {};
+  DIMS.forEach(dm=> byDim[dm]=wavg(cells.filter(c=>c.dim===dm)));
+  Object.keys(L3).forEach(l=>{
+    const cs = cells.filter(c=>c.l3===l);
+    byL3[l] = {score:wavg(cs), min:Math.min(...cs.map(c=>c.s)),
+               dims:Object.fromEntries(DIMS.map(dm=>[dm, wavg(cs.filter(c=>c.dim===dm))]))};
+  });
+  const overall = wavg(cells);
+  const completeness = Math.round(cells.length/Q.length*100);
+  return {byDim,byL3,overall,completeness};
+}
+
+function buildReport(){
+  const R = score();
+  const ob = bandFor(R.overall);
+  // strengths / gaps by L3
+  const l3arr = Object.keys(L3).map(l=>({l,name:L3[l],...R.byL3[l],band:bandFor(R.byL3[l].score)}));
+  const gaps = l3arr.filter(x=>['Reactive','Emerging'].includes(x.band)).sort((a,b)=>a.score-b.score);
+  const strengths = l3arr.filter(x=>['Advanced','Leading'].includes(x.band)).sort((a,b)=>b.score-a.score);
+  // cross-dimension flags
+  const d = R.byDim, flags=[];
+  const lo=x=>x!=null&&x<3, hi=x=>x!=null&&x>=3.5;
+  if(hi(d.Data)&&lo(d.Process)) flags.push("Strong Data maturity isn't matched by Process — good data isn't being turned into decisions.");
+  if(hi(d.Technology)&&lo(d.People)) flags.push("Technology outpaces People — high risk of low tool adoption and manual workarounds.");
+  if(lo(d.People)&&lo(d.Process)) flags.push("People and Process are both weak — low governance maturity across the planning cycle.");
+
+  const dimBar = DIMS.map(dm=>{
+    const v=d[dm], b=bandFor(v), pct=v?(v/5*100):0;
+    return `<div class="bar"><div class="lab">${dm}</div><div class="track"><div class="fill" style="width:${pct}%;background:${BANDCOL[b]||'#ccc'}"></div></div><div class="val">${v??'—'} · ${b}</div></div>`;
+  }).join('');
+
+  const heat = l3arr.map(x=>`<tr>
+    <td>${x.name}</td>
+    <td style="text-align:center;font-weight:600">${x.score??'—'}</td>
+    ${DIMS.map(dm=>{const v=x.dims[dm];const b=bandFor(v);return `<td class="cell-sc" style="background:${v?BANDCOL[b]:'#eee'}">${v??'—'}</td>`}).join('')}
+    <td><span class="chip" style="background:${BANDCOL[x.band]}">${x.band}</span></td></tr>`).join('');
+
+  const li = (items,col)=> items.length? items.map(x=>`<li><span class="dot" style="background:${col}"></span><span><b>${x.name}</b> — ${x.band} (${x.score})</span></li>`).join('') : `<li style="color:var(--grey)">None identified at this level.</li>`;
+
+  const prio = gaps[0]?gaps[0].name:(l3arr.sort((a,b)=>a.score-b.score)[0].name);
+
+  $('rep-body').innerHTML = `
+    <div class="rephero">
+      <div class="scorebadge"><div class="n">${R.overall??'—'}</div><div class="lv">${ob}</div><div class="of">overall · out of 5.0</div></div>
+      <div>
+        <h2>${client.co} — Demand Planning Maturity</h2>
+        <p>Your organization is operating at the <b style="color:var(--mint)">${ob}</b> stage overall. The binding constraint is <b style="color:var(--mint)">${prio}</b> — the lowest-maturity activity and the priority for transformation.</p>
+        <div class="meta-line">${client.ind} &nbsp;·&nbsp; Completeness ${R.completeness}% &nbsp;·&nbsp; 6 activities · 4 dimensions · 26 questions</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel"><h3>Maturity by dimension</h3>${dimBar}
+        ${flags.length?`<div class="note">${flags[0]}</div>`:''}
+      </div>
+      <div class="panel radar-wrap"><canvas id="radar" width="360" height="320"></canvas></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:22px"><h3>Activity maturity heatmap</h3>
+      <table><thead><tr><th>L3 Activity</th><th style="text-align:center">Overall</th>${DIMS.map(x=>`<th style="text-align:center">${x}</th>`).join('')}<th>Stage</th></tr></thead>
+      <tbody>${heat}</tbody></table>
+    </div>
+
+    <div class="grid2">
+      <div class="panel"><h3>Top strengths</h3><ul class="clean">${li(strengths,'var(--advanced)')}</ul></div>
+      <div class="panel"><h3>Priority gaps</h3><ul class="clean">${li(gaps,'var(--reactive)')}</ul></div>
+    </div>
+
+    <div class="panel" style="margin-top:22px"><h3>Transformation roadmap</h3>
+      <div class="road">
+        <div class="phase"><div class="ph">Phase 1 · 0–3 months</div><h4>Stabilise</h4><p>Fix critical gaps, establish governance, ownership, and master-data discipline in the weakest activities.</p></div>
+        <div class="phase"><div class="ph">Phase 2 · 3–9 months</div><h4>Standardise</h4><p>Consensus process, segmentation-driven statistical engine, exception management, planner capability.</p></div>
+        <div class="phase"><div class="ph">Phase 3 · 9–18 months</div><h4>Optimise</h4><p>ML forecasting and demand sensing, scenario planning, and movement toward touchless planning.</p></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="window.print()">Download / print report (PDF)</button>
+      <button class="btn ghost" onclick="downloadPPT()">Generate PowerPoint deck</button>
+      <button class="btn ghost" onclick="location.reload()">Start over</button>
+    </div>
+    <p style="color:var(--grey);font-size:12px;margin-top:18px">Prototype · scoring is deterministic and weighted (MUST=1.0, GOOD=0.5). The PPTX button is wired to the Python deck engine in the hosted build.</p>`;
+
+  show('s-report');
+  drawRadar(DIMS.map(dm=>R.byDim[dm]||0));
+}
+
+function drawRadar(vals){
+  const c=document.getElementById('radar'),x=c.getContext('2d');
+  const cx=180,cy=160,rad=120,n=vals.length;
+  x.clearRect(0,0,360,320);
+  // rings
+  for(let r=1;r<=5;r++){x.beginPath();for(let i=0;i<=n;i++){const a=Math.PI*2*i/n-Math.PI/2,rr=rad*r/5;const px=cx+rr*Math.cos(a),py=cy+rr*Math.sin(a);i?x.lineTo(px,py):x.moveTo(px,py);}x.strokeStyle='#D8E4E4';x.stroke();}
+  // spokes + labels
+  x.fillStyle='#1F2A2E';x.font='13px Outfit';x.textAlign='center';
+  DIMS.forEach((dm,i)=>{const a=Math.PI*2*i/n-Math.PI/2;const lx=cx+(rad+22)*Math.cos(a),ly=cy+(rad+22)*Math.sin(a);x.beginPath();x.moveTo(cx,cy);x.lineTo(cx+rad*Math.cos(a),cy+rad*Math.sin(a));x.strokeStyle='#E4ECEC';x.stroke();x.fillText(dm,lx,ly+4);});
+  // data
+  x.beginPath();vals.forEach((v,i)=>{const a=Math.PI*2*i/n-Math.PI/2,rr=rad*(v||0)/5;const px=cx+rr*Math.cos(a),py=cy+rr*Math.sin(a);i?x.lineTo(px,py):x.moveTo(px,py);});x.closePath();
+  x.fillStyle='rgba(2,128,144,.22)';x.fill();x.strokeStyle='#028090';x.lineWidth=2.5;x.stroke();
+  vals.forEach((v,i)=>{const a=Math.PI*2*i/n-Math.PI/2,rr=rad*(v||0)/5;x.beginPath();x.arc(cx+rr*Math.cos(a),cy+rr*Math.sin(a),4,0,7);x.fillStyle='#02C39A';x.fill();});
+}
+</script>
+<script src="file.js"></script>
+</body>
+</html>
