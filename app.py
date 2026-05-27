@@ -5,7 +5,7 @@ import os
 from ppt_generator import create_ppt
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://papaya-donut-9b9b21.netlify.app/"])
 
 @app.route("/")
 def home():
