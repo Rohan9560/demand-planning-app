@@ -1,11 +1,16 @@
 from flask import Flask, request, send_file
 from flask_cors import CORS
-import os
 
 from ppt_generator import create_ppt
 
 app = Flask(__name__)
-CORS(app, origins=["https://papaya-donut-9b9b21.netlify.app/"])
+
+CORS(
+    app,
+    origins=[
+        "https://papaya-donut-9b9b21.netlify.app"
+    ]
+)
 
 @app.route("/")
 def home():
@@ -16,7 +21,6 @@ def generate_ppt():
 
     report_data = request.json
 
-    print("Received Data:")
     print(report_data)
 
     ppt_path = create_ppt(report_data)
@@ -28,5 +32,12 @@ def generate_ppt():
     )
 
 if __name__ == "__main__":
+
+    import os
+
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+
+    app.run(
+        host="0.0.0.0",
+        port=port
+    )
