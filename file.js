@@ -12,7 +12,7 @@ async function downloadPPT() {
     };
 
     const response = await fetch(
-        "http://localhost:5000/generate-ppt",
+        "http://demand-planning-app-nz8x.onrender.com/generate-ppt",
         {
             method: "POST",
             headers: {
